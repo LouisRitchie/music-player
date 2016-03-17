@@ -2,6 +2,8 @@
 simple text-based music player.
 author: Louis Ritchie
 March 16th-17th, 2016
+
+NOTE this is plain Node.js, no jquery, no date packages
 */
 
 var interval, div, prev, play, pause, next, stop;
@@ -13,9 +15,13 @@ play = document.getElementById("play");
 pause = document.getElementById("pause");
 next = document.getElementById("next");
 stop = document.getElementById("stop");
+add = document.getElementById("add");
+addSong = document.getElementById("addSong");
+addLength = document.getElementById("addLength");
 
-// play is the only button that will do anything when done loading.
+// Initial event listeners for adding songs, starting playback.
 play.addEventListener("click", _handlePlay);
+add.addEventListener("click", _handleAdd);
 
 // moment.js might do a better job of managing times - for now we Date array
 var times = [];
@@ -27,21 +33,17 @@ var paused = true;
 
 // test data - pre-filled arrays of songs and song lengths (2 arrays) 
 var songs = new Array();
-var lengths = [5,7,5];
-songs.push("hair");
-songs.push("dunsel");
-songs.push("reign");
-
-//we must convert the lengths to their equivalent in ms.
-lengths = lengths.map(function timesBy1000(length) 
-{
-	return length = length * 1000;
-});
-
+var lengths = new Array();
 
 //begins playing songs as they are ordered in the list.
 function init() 
 {
+	//we must convert the lengths to their equivalent in ms.
+	lengths = lengths.map(function timesBy1000(length) 
+	{
+		return length = length * 1000;
+	});
+
 	times[0] = times[1] = new Date().getTime();
 	times[2] = 0;
 	interval = setInterval(playing, 1000);
@@ -54,6 +56,18 @@ function init()
 	i = 0;
 }
 
+function reset()
+{
+	clearInterval(interval);
+	prev.removeEventListener("click", _handlePrev);	
+	pause.removeEventListener("click", _handlePause);
+	next.removeEventListener("click", _handleNext);
+	stop.removeEventListener("click", _handleStop);
+	i = null; // next press of play button will trigger init()
+	about.innerHTML = "";
+	timer.innerHTML = "";
+}
+
 /* playing()
 Writes current song time, song info to html every second
 contains the logic to go to the next song on song end.
@@ -63,7 +77,7 @@ function playing()
 	times[1] = new Date().getTime();
 	var seconds = times[1] - times[0];
 	if(lengths[i] - 200 < seconds) { // handles song change at end of song.
-		i++;
+		changeSong("next");
 		times[0] = times[1] = new Date().getTime(); 
 		seconds = 0;
 		about.innerHTML = songs[i];
@@ -80,7 +94,6 @@ formats the time into seconds:ms.
 */
 function writeTimeToHTML(t) 
 {	
-	console.log("writing " + t.toString());
 	t = t + 900; // This is another symptom of how hackish this really is.
         output = Math.floor(t/1000);
         output = [(Math.floor(output/60)).toString(), (output%60).toString()];
@@ -116,6 +129,17 @@ function changeSong(str)
 Handlers for all five buttons: prev, play, pause, next, and stop.
 
 ***/
+function _handleAdd() 
+{
+	var song = document.getElementById("addSong");
+	var length = document.getElementById("addLength");	
+	songs.push(song.value);
+	var l = length.value.split(":");
+	var t = Number(l[0]) * 60 + Number(l[1]);
+	lengths.push(t);
+	console.log(songs, lengths)
+}
+
 function _handlePrev() 
 {
 	times[1] = times[0] = times[2] = new Date().getTime();
@@ -128,7 +152,12 @@ function _handlePrev()
 }
 
 function _handlePlay() 
-{
+{	
+	if (songs.length < 1 || lengths.length < 1) {
+		about.innerHTML = "Please enter songs first."
+		return;
+	}
+
 	if (i == null) { // if init() has not been called we call it here.
 		init();
 	}
@@ -166,5 +195,5 @@ function _handleNext()
 
 function _handleStop() 
 {
-
+	reset()
 }
