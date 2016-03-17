@@ -35,7 +35,8 @@ var paused = true;
 // test data - pre-filled arrays of songs and song lengths (2 arrays) 
 var songs = new Array();
 var lengths = new Array();
-
+var originalSongs = new Array();
+var originalLengths = new Array();
 // begins playing songs as they are ordered in the list.
 function init() 
 {
@@ -160,10 +161,10 @@ function _handleAdd()
 	// write the songs to songList
 	songList.innerHTML += song.value + " - " + length.value + "<br>";
 		
-	songs.push(song.value);
+	originalSongs.push(song.value);
 	var l = length.value.split(":");
 	var t = Number(l[0]) * 60 + Number(l[1]);
-	lengths.push(t);
+	originalLengths.push(t);
 	console.log(songs, lengths)
 }
 
@@ -180,12 +181,14 @@ function _handlePrev()
 
 function _handlePlay() 
 {	
-	if (songs.length < 1 || lengths.length < 1) {
+	if (originalSongs.length < 1 || originalLengths.length < 1) {
 		about.innerHTML = "Please enter songs first."
 		return;
 	}
 	if (i == null) { // if init() has not been called we call it here.
-		init();
+		songs = originalSongs.slice();
+		lengths = originalSongs.slice();
+		init()
 	}
 	if (paused) {
 		// here we add total time paused to times[0]
@@ -194,33 +197,6 @@ function _handlePlay()
 		interval = setInterval(playing, 1000);
 		paused = false;
 	} 
-	else {
-		// do nothing - already playing
-	}
-}
-
-function _handleShuffle() 
-{
-	if (songs.length < 1 || lengths.length < 1) {
-		about.innerHTML = "Please enter songs first."
-		return;
-	}
-	if (i == null) { // if init() has not been called we call it here.
-		var j, k;
-		var temp = [];
-		temp = songs.slice();
-		temp = shuffleArray(temp);
-		var tempLengths = [];
-		for (j = 0; j < songs.length; j++) {
-			k = temp.indexOf(songs[j]);
-			tempLengths[k] = lengths[j]
-		}
-		console.log(songs, lengths);
-		console.log(temp, tempLengths);
-		songs = temp;
-		lengths = tempLengths;
-		init()
-	}
 	else {
 		// do nothing - already playing
 	}
@@ -249,4 +225,29 @@ function _handleNext()
 function _handleStop() 
 {
 	reset()
+}
+
+function _handleShuffle() 
+{
+	if (originalSongs.length < 1 || originalLengths.length < 1) {
+		about.innerHTML = "Please enter songs first."
+		return;
+	}
+	if (i == null) { // if init() has not been called we call it here.
+		var j, k;
+		var temp = [];
+		temp = originalSongs.slice();
+		temp = shuffleArray(temp);
+		var tempLengths = [];
+		for (j = 0; j < songs.length; j++) {
+			k = temp.indexOf(songs[j]);
+			tempLengths[k] = originalLengths[j]
+		}
+		songs = temp;
+		lengths = tempLengths;
+		init()
+	}
+	else {
+		// do nothing - already playing
+	}
 }
