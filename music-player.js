@@ -15,12 +15,13 @@ play = document.getElementById("play");
 pause = document.getElementById("pause");
 next = document.getElementById("next");
 stop = document.getElementById("stop");
+shuffle = document.getElementById("shuffle");
 add = document.getElementById("add");
-addSong = document.getElementById("addSong");
-addLength = document.getElementById("addLength");
+songList = document.getElementById("songList");
 
 // Initial event listeners for adding songs, starting playback.
 play.addEventListener("click", _handlePlay);
+shuffle.addEventListener("click", _handleShuffle);
 add.addEventListener("click", _handleAdd);
 
 // moment.js might do a better job of managing times - for now we Date array
@@ -35,15 +36,15 @@ var paused = true;
 var songs = new Array();
 var lengths = new Array();
 
-//begins playing songs as they are ordered in the list.
+// begins playing songs as they are ordered in the list.
 function init() 
 {
-	//we must convert the lengths to their equivalent in ms.
+	// we must convert the lengths to their equivalent in ms.
 	lengths = lengths.map(function timesBy1000(length) 
 	{
 		return length = length * 1000;
 	});
-
+	
 	times[0] = times[1] = new Date().getTime();
 	times[2] = 0;
 	interval = setInterval(playing, 1000);
@@ -124,6 +125,28 @@ function changeSong(str)
 	}
 	about.innerHTML = songs[i];
 }
+
+// Grabbed from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffleArray(array) 
+{
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 /***
 
 Handlers for all five buttons: prev, play, pause, next, and stop.
@@ -132,7 +155,11 @@ Handlers for all five buttons: prev, play, pause, next, and stop.
 function _handleAdd() 
 {
 	var song = document.getElementById("addSong");
-	var length = document.getElementById("addLength");	
+	var length = document.getElementById("addLength");
+	
+	// write the songs to songList
+	songList.innerHTML += song.value + " - " + length.value + "<br>";
+		
 	songs.push(song.value);
 	var l = length.value.split(":");
 	var t = Number(l[0]) * 60 + Number(l[1]);
@@ -157,7 +184,6 @@ function _handlePlay()
 		about.innerHTML = "Please enter songs first."
 		return;
 	}
-
 	if (i == null) { // if init() has not been called we call it here.
 		init();
 	}
@@ -168,6 +194,33 @@ function _handlePlay()
 		interval = setInterval(playing, 1000);
 		paused = false;
 	} 
+	else {
+		// do nothing - already playing
+	}
+}
+
+function _handleShuffle() 
+{
+	if (songs.length < 1 || lengths.length < 1) {
+		about.innerHTML = "Please enter songs first."
+		return;
+	}
+	if (i == null) { // if init() has not been called we call it here.
+		var j, k;
+		var temp = [];
+		temp = songs.slice();
+		temp = shuffleArray(temp);
+		var tempLengths = [];
+		for (j = 0; j < songs.length; j++) {
+			k = temp.indexOf(songs[j]);
+			tempLengths[k] = lengths[j]
+		}
+		console.log(songs, lengths);
+		console.log(temp, tempLengths);
+		songs = temp;
+		lengths = tempLengths;
+		init()
+	}
 	else {
 		// do nothing - already playing
 	}
