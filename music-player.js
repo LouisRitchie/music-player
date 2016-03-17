@@ -27,19 +27,21 @@ var paused = true;
 
 // test data - pre-filled arrays of songs and song lengths (2 arrays) 
 var songs = new Array();
-var lengths = [3,4,3];
+var lengths = [5,7,5];
 songs.push("hair");
 songs.push("dunsel");
 songs.push("reign");
 
 //we must convert the lengths to their equivalent in ms.
-lengths = lengths.map(function timesBy1000(length) {
+lengths = lengths.map(function timesBy1000(length) 
+{
 	return length = length * 1000;
 });
 
 
 //begins playing songs as they are ordered in the list.
-function init() {
+function init() 
+{
 	times[0] = times[1] = new Date().getTime();
 	times[2] = 0;
 	interval = setInterval(playing, 1000);
@@ -54,40 +56,86 @@ function init() {
 
 /* playing()
 Writes current song time, song info to html every second
+contains the logic to go to the next song on song end.
 */
-function playing() {
+function playing() 
+{
 	times[1] = new Date().getTime();
-	about.innerHTML = songs[i];	
-	var seconds = times[1] - times[0]
-	writeTimeToHTML(seconds);
-	// if the current amount of seconds is  within 200ms of song length
-	// we must increment `i` to get to the next song.
-	if(lengths[i] - 200 < seconds && lengths[i] + 200 > seconds) {
+	var seconds = times[1] - times[0];
+	if(lengths[i] - 200 < seconds) { // handles song change at end of song.
 		i++;
-		times[0] = new Date().getTime();
+		times[0] = times[1] = new Date().getTime(); 
+		seconds = 0;
+		about.innerHTML = songs[i];
+		writeTimeToHTML(seconds);
+	}
+	else {
+		about.innerHTML = songs[i];	
+		writeTimeToHTML(seconds);
 	}
 }
 
-/* writeTimeToHTML
+/* writeTimeToHTML()
 formats the time into seconds:ms.
 */
-function writeTimeToHTML(t) {
-        output = (t/1000).toString().split(".");
-        timer.innerHTML = output[1]
+function writeTimeToHTML(t) 
+{	
+	console.log("writing " + t.toString());
+	t = t + 900; // This is another symptom of how hackish this really is.
+        output = Math.floor(t/1000);
+        output = [(Math.floor(output/60)).toString(), (output%60).toString()];
+	if (output[1].length == 1) {
+		output[1] = "0" + output[1]
+	} 
+        timer.innerHTML = output[0].toString() + ":" + output[1].toString()
 }
 
-//Handlers for all five buttons: prev, play, pause, next, and stop.
-function _handlePrev() {
+/* changeSong(str)
+increments the global variable `i` depending on str parameter & current `i`
+*/
+function changeSong(str) 
+{
+	switch (str) {
+		case "next":
+			i++;
+			i = i % songs.length;
+			break;
+		case "prev":
+			i--
+			if (i == -1) {
+				i = songs.length - 1;
+			}
+			break;
+		default:
+			break;
+	}
+	about.innerHTML = songs[i];
+}
+/***
 
+Handlers for all five buttons: prev, play, pause, next, and stop.
+
+***/
+function _handlePrev() 
+{
+	times[1] = times[0] = times[2] = new Date().getTime();
+	var seconds = times[1] - times[0];
+	if (seconds < 1200) { // if we just hit prev a second ago, goto prev
+		changeSong("prev");
+	}
+	seconds = 0;
+	writeTimeToHTML(seconds);
 }
 
-function _handlePlay() {
+function _handlePlay() 
+{
 	if (i == null) { // if init() has not been called we call it here.
 		init();
 	}
 	if (paused) {
 		// here we add total time paused to times[0]
-		times[0] += new Date().getTime() - times[2];
+		times[1] = new Date().getTime()
+		times[0] += times[1] - times[2];
 		interval = setInterval(playing, 1000);
 		paused = false;
 	} 
@@ -96,7 +144,8 @@ function _handlePlay() {
 	}
 }
 
-function _handlePause() {
+function _handlePause() 
+{
 	if (paused) {
 		// do nothing - already paused
 	}
@@ -107,10 +156,15 @@ function _handlePause() {
 	}
 }
 
-function _handleNext() {
-	
+function _handleNext() 
+{	
+	changeSong("next");
+	times[1] = times[0] = times[2] = new Date().getTime();
+	seconds = 0;
+	writeTimeToHTML(seconds)
 }
 
-function _handleStop() {
+function _handleStop() 
+{
 
 }
